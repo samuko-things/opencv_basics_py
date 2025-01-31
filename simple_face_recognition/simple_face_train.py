@@ -1,0 +1,70 @@
+## face recognition with built-in opencv face recognizers
+
+import os
+import cv2 as cv
+import numpy as np
+
+
+path = "opencv_basics/resources/Photos/group 2.jpg"
+cascade_path = "opencv_basics/face_detection/haar_face.xml"
+
+people = ['Ben Afflek', 'Elton John', 'Jerry Seinfield', 'Madonna', 'Mindy Kaling']
+DIR = r'/home/samuko95/py_dev/opencv_basics/resources/Faces/train'
+
+haar_cascade = cv.CascadeClassifier(cascade_path)
+
+
+features = []
+labels = []
+
+
+
+def create_train():
+    for person in people:
+        path = os.path.join(DIR, person)
+        label = people.index(person)
+
+        for img in os.listdir(path):
+            img_path = os.path.join(path,img)
+
+            img_array = cv.imread(img_path)
+            if img_array is None:
+                continue 
+                
+            gray = cv.cvtColor(img_array, cv.COLOR_BGR2GRAY)
+
+            faces_rect = haar_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4)
+
+            for (x,y,w,h) in faces_rect:
+                faces_roi = gray[y:y+h, x:x+w]
+                features.append(faces_roi)
+                labels.append(label)
+
+
+
+
+create_train()
+print('Training done ---------------')
+
+# print(f"length of features = {len(features)}")
+# print(f"length of label list = {len(labels)}")
+
+
+# convert features and label list to numpy arrays
+features = np.array(features, dtype='object')
+labels = np.array(labels)
+
+# face_recognizer = cv.face.LBPHFaceRecognizer_create()
+
+face_recognizer = cv.face.LBPHFaceRecognizer_create()
+
+# Train the Recognizer on the features list and the labels list
+face_recognizer.train(features,labels)
+
+
+## save model for reuse test
+face_recognizer.save('opencv_basics/face_recognition/face_trained.yml')
+np.save('opencv_basics/face_recognition/features.npy', features)
+np.save('opencv_basics/face_recognition/labels.npy', labels)
+
+print('Finish done ---------------')
